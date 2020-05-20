@@ -21,7 +21,7 @@ impl Process {
   /// # Examples
   /// ```
   /// extern crate trickster;
-  /// use trickster::external::process::Process;
+  /// use trickster::external::Process;
   ///
   /// fn main() -> Result<(), Box<dyn std::error::Error>> {
   ///   let ctx = Process::new("current_process_name")?;
@@ -95,7 +95,7 @@ impl Process {
   /// Just for example purposes.
   /// ```
   /// extern crate trickster;
-  /// use trickster::external::process::Process;
+  /// use trickster::external::Process;
   ///
   /// fn main() -> Result<(), Box<dyn std::error::Error>> {
   ///   let ctx = Process::new("current_process_name")?;
@@ -179,7 +179,7 @@ impl Process {
   /// Just for example purposes.
   /// ```
   /// extern crate trickster;
-  /// use trickster::external::process::Process;
+  /// use trickster::external::Process;
   ///   
   /// fn main() -> Result<(), Box<dyn std::error::Error>> {
   ///   let ctx = Process::new("current_process_name")?;
