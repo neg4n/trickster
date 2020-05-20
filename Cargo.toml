@@ -5,6 +5,7 @@ version = "0.0.1"
 license = "MIT"
 authors = ["Igor Klepacki <nullopt@riseup.net>"]
 repository = "https://github.com/neg4n/trickster"
+readme = "README.md"
 keywords = [
     "linux",
     "memory-hacking",
