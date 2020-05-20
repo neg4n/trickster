@@ -1,0 +1,16 @@
+[package]
+name = "trickster"
+description = "family friendly linux memory hacking library."
+version = "0.0.1"
+license = "MIT"
+authors = ["Igor Klepacki <nullopt@riseup.net>"]
+
+[workspace]
+members = [
+    "examples/get_pid",
+    "examples/rw_memory_ex"
+]
+
+[dependencies]
+anyhow = "1.0.31"
+nix = "0.17.0"
