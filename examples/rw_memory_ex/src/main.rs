@@ -1,5 +1,5 @@
 extern crate trickster;
-use trickster::external::process::Process;
+use trickster::external::Process;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   let ctx = Process::new("rw_memory_ex")?;
