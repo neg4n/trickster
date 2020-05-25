@@ -23,6 +23,9 @@ This library currently provides ability to:
 - Manipulate process memory.
     - Write memory.
     - Read memory.
+- Map process memory regions.
+    - Find first occurence of memory region with name  
+      equal to `x` and optionally permissions equal to `z`.
     
 and will provide a lot more in the future.
 

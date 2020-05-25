@@ -40,7 +40,7 @@ mod no_realloc_reader {
   }
 }
 
-/// # Process
+// TODO: Document fields
 /// Process is object implementation of existing   
 /// numeric entry in `/proc/` directory.
 ///   
@@ -48,7 +48,6 @@ mod no_realloc_reader {
 /// if memory regions was not mapped. (`map_memory()` was not called).
 ///   
 /// [`None`]: https://doc.rust-lang.org/std/option/
-// TODO: Document fields
 pub struct Process {
   pid: Pid,
   name: String,
@@ -210,6 +209,7 @@ impl Process {
 
     Ok(io::Cursor::new(buffer))
   }
+
   /// Writes `buffer` at `address` in remote process. Size of `buffer`  
   /// is (or should be, if specified) equivalent to size of generic type (`T`).  
   /// Writing is done using [**process_vm_writev(2)**](http://man7.org/linux/man-pages/man2/process_vm_writev.2.html)
@@ -289,6 +289,8 @@ impl Process {
 
     Ok(())
   }
+
+  // TODO: Consider re-name to parse_maps(); (also in docs...)
   /// Reads `/proc/\[pid\]/maps` file line by line and parses  
   /// every value to the corresponding value in `MemoryRegion` struct  
   /// in `self.memory_regions`.
