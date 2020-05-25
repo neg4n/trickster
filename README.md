@@ -7,7 +7,7 @@ library with the same purpose but written in C++17.
   
 ```toml
 [dependencies]
-trickster = "0.0.3"
+trickster = "0.0.4"
 ```
 
 # Usage and documentation
