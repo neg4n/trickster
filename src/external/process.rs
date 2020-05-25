@@ -41,8 +41,14 @@ mod no_realloc_reader {
 }
 
 /// # Process
-/// Process is object implementation of existing numeric entry  
-/// in `/proc/` directory.
+/// Process is object implementation of existing   
+/// numeric entry in `/proc/` directory.
+///   
+/// **NOTE**: `memory_regions` field can be [`None`] .     
+/// if memory regions was not mapped. (`map_memory()` was not called).
+///   
+/// [`None`]: https://doc.rust-lang.org/std/option/
+// TODO: Document fields
 pub struct Process {
   pid: Pid,
   name: String,
@@ -347,7 +353,10 @@ impl Process {
   }
 
   /// Returns immutable reference to the memory regions.  
-  /// If `self.memory_regions` is None, Err is returned.  
+  /// If `self.memory_regions` is [`None`], [`Err`] is returned.  
+  ///
+  /// [`None`]: https://doc.rust-lang.org/std/option/
+  /// [`Err`]: https://doc.rust-lang.org/std/result/
   ///  
   /// **NOTE**: `map_memory();` should be called minimum once  
   /// before calling `get_memory_regions();`.
@@ -360,13 +369,15 @@ impl Process {
 
   /// Returns immutable reference to memory region with  
   /// `path` field in `MemoryRegion` struct trimmed to  
-  /// contain only file name == `region_name` and  
-  /// region permissions == `permissions_eq` if not None.  
+  /// contain only file name equals `region_name` and  
+  /// region permissions equals `permissions_eq` if not [`None`].  
   ///   
+  /// [`None`]: https://doc.rust-lang.org/std/option/
+  ///  
   /// **NOTES**:
   /// - `map_memory();` should be called minimum once  
   /// before calling `region_find_first_by_name();`.
-  /// - `region_name` can be == `[anonymous_region]` if  
+  /// - `region_name` can be equal to `[anonymous_region]` if  
   /// region was not mapped from a file.
   pub fn region_find_first_by_name(
     &self,
