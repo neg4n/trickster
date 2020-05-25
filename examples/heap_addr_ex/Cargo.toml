@@ -1,0 +1,9 @@
+[package]
+name = "heap_addr_ex"
+description = "heap_addr_ex example [trickster]"
+version = "0.0.1"
+license = "MIT"
+authors = ["Igor Klepacki <nullopt@riseup.net>"]
+
+[dependencies]
+trickster = { path = "../.." }

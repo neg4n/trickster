@@ -20,9 +20,11 @@ categories = [
 [workspace]
 members = [
     "examples/get_pid",
-    "examples/rw_memory_ex"
+    "examples/rw_memory_ex",
+    "examples/heap_addr_ex"
 ]
 
 [dependencies]
 anyhow = "1.0.31"
 nix = "0.17.0"
+scan_fmt = "0.2.5"

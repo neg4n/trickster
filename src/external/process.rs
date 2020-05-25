@@ -2,8 +2,43 @@ use anyhow::{anyhow, Result};
 use nix::sys::uio::{process_vm_readv, process_vm_writev, IoVec, RemoteIoVec};
 use nix::unistd::Pid;
 use std::fs;
-use std::io::Cursor;
+use std::io;
 use std::mem;
+
+use super::{MemoryRegion, RegionPermissions};
+
+mod no_realloc_reader {
+  use std::{
+    fs::File,
+    io::{self, prelude::*},
+  };
+
+  pub struct BufReader {
+    reader: io::BufReader<File>,
+  }
+
+  impl BufReader {
+    pub fn open(path: impl AsRef<std::path::Path>) -> io::Result<Self> {
+      let file = File::open(path)?;
+      let reader = io::BufReader::new(file);
+
+      Ok(Self { reader })
+    }
+
+    pub fn read_line<'buf>(
+      &mut self,
+      buffer: &'buf mut String,
+    ) -> Option<io::Result<&'buf mut String>> {
+      buffer.clear();
+
+      self
+        .reader
+        .read_line(buffer)
+        .map(|u| if u == 0 { None } else { Some(buffer) })
+        .transpose()
+    }
+  }
+}
 
 /// # Process
 /// Process is object implementation of existing numeric entry  
@@ -11,12 +46,16 @@ use std::mem;
 pub struct Process {
   pid: Pid,
   name: String,
+  memory_regions: Option<Vec<MemoryRegion>>,
 }
 
 impl Process {
   /// Process object constructor. Finds process id by name by iterating  
   /// over numeric directories in `/proc/` and comparing name  
   /// provided in method parameter with one located in `/proc/\[pid\]/comm` file.
+  ///
+  /// **WARNING**: This method __does not__ initialize `memory_regions` field.  
+  /// If you want to do so, use `map_memory()`.
   ///
   /// # Examples
   /// ```
@@ -72,6 +111,7 @@ impl Process {
               .expect("Could not parse i32 value from filename_string."),
           ),
           name: true_name,
+          memory_regions: None,
         });
       }
     }
@@ -137,7 +177,7 @@ impl Process {
   /// ...and this prints output like:  
   /// `example process id: 26444`  
   /// `kind_of_remote_var from byte buffer: 1337`
-  pub fn read_memory<T>(&self, address: usize) -> Result<Cursor<Vec<u8>>> {
+  pub fn read_memory<T>(&self, address: usize) -> Result<io::Cursor<Vec<u8>>> {
     let bytes_requested = mem::size_of::<T>();
     let mut buffer = vec![0u8; bytes_requested];
 
@@ -162,7 +202,7 @@ impl Process {
       return Err(anyhow!("Could not read memory. Partial read occurred."));
     }
 
-    Ok(Cursor::new(buffer))
+    Ok(io::Cursor::new(buffer))
   }
   /// Writes `buffer` at `address` in remote process. Size of `buffer`  
   /// is (or should be, if specified) equivalent to size of generic type (`T`).  
@@ -243,6 +283,58 @@ impl Process {
 
     Ok(())
   }
+  /// Reads `/proc/\[pid\]/maps` file line by line and parses  
+  /// every value to the corresponding value in `MemoryRegion` struct  
+  /// in `self.memory_regions`.
+  pub fn map_memory(&mut self) -> Result<()> {
+    let maps_path = std::path::Path::new("/proc/")
+      .join(self.pid.to_string())
+      .join("maps");
+
+    let mut reader = no_realloc_reader::BufReader::open(maps_path)?;
+    let mut buffer = String::new();
+    let mut memory_regions: Vec<MemoryRegion> = Vec::new();
+
+    while let Some(line) = reader.read_line(&mut buffer) {
+      let mut permissions: RegionPermissions = RegionPermissions {
+        readable: false,
+        writeable: false,
+        executable: false,
+        shared: false,
+      };
+
+      let (start, end, permissions_string, offset, dev_major, dev_minor, inode, path) = scan_fmt_some!(
+        line?.trim(),
+        "{x}-{x} {} {x} {}:{} {} {}",
+        [hex usize], [hex usize], String, [hex usize], u8, u8, usize, String
+      );
+
+      for char in permissions_string.unwrap().chars() {
+        match char {
+          'r' => permissions.readable = true,
+          'w' => permissions.writeable = true,
+          'x' => permissions.executable = true,
+          's' => permissions.shared = true,
+          _ => continue,
+        }
+      }
+
+      memory_regions.push(MemoryRegion {
+        start: start.unwrap(),
+        end: end.unwrap(),
+        permissions: permissions,
+        offset: offset.unwrap(),
+        dev_major: dev_major.unwrap(),
+        dev_minor: dev_minor.unwrap(),
+        inode: inode.unwrap(),
+        path: path,
+      });
+    }
+
+    self.memory_regions = Some(memory_regions);
+
+    Ok(())
+  }
 
   /// Returns copy of process id.
   pub fn get_pid(&self) -> Pid {
@@ -252,5 +344,63 @@ impl Process {
   /// Returns immutable reference to the process name.
   pub fn get_name(&self) -> &String {
     &self.name
+  }
+
+  /// Returns immutable reference to the memory regions.  
+  /// If `self.memory_regions` is None, Err is returned.  
+  ///  
+  /// **NOTE**: `map_memory();` should be called minimum once  
+  /// before calling `get_memory_regions();`.
+  pub fn get_memory_regions(&self) -> Result<&Vec<MemoryRegion>> {
+    match &self.memory_regions {
+      Some(memory_regions) => return Ok(memory_regions),
+      None => Err(anyhow!("Memory regions not mapped.")),
+    }
+  }
+
+  /// Returns immutable reference to memory region with  
+  /// `path` field in `MemoryRegion` struct trimmed to  
+  /// contain only file name == `region_name` and  
+  /// region permissions == `permissions_eq` if not None.  
+  ///   
+  /// **NOTES**:
+  /// - `map_memory();` should be called minimum once  
+  /// before calling `region_find_first_by_name();`.
+  /// - `region_name` can be == `[anonymous_region]` if  
+  /// region was not mapped from a file.
+  pub fn region_find_first_by_name(
+    &self,
+    region_name: &str,
+    permissions_eq: Option<RegionPermissions>,
+  ) -> Result<&MemoryRegion> {
+    let regions = self.get_memory_regions()?;
+    for region in regions {
+      let index_to_split = region
+        .path
+        .clone()
+        .unwrap_or("[anonymous_region]".to_string())
+        .rfind('/')
+        .unwrap_or(0 as usize);
+
+      let split_file_name = region
+        .path
+        .clone()
+        .unwrap_or("[anonymous_region]".to_string())
+        .split_off(index_to_split + if index_to_split > 0 { 1 } else { 0 });
+
+      if split_file_name == region_name {
+        match permissions_eq {
+          Some(permissions) => {
+            if permissions == region.permissions {
+              return Ok(region);
+            } else {
+              return Err(anyhow!("Could not get region with specific permissions."));
+            }
+          }
+          None => return Ok(region),
+        };
+      }
+    }
+    Err(anyhow!("Could not find {}.", region_name))
   }
 }
