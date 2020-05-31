@@ -2,9 +2,9 @@ extern crate trickster;
 use trickster::external::{Process, RegionPermissions};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-  // To use map_memory() it needs to be mutable.
+  // In order to use parse_maps() it needs to be mutable.
   let mut ctx = Process::new("heap_addr_ex")?;
-  ctx.map_memory()?;
+  ctx.parse_maps()?;
 
   // Find first occurence of region with name equal
   // to `[heap]` and permissions equal to `rw-p`.
