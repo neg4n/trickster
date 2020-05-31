@@ -1,10 +1,18 @@
+/// This describes how pages in the region can ba ccessed.  
+/// There are four different permissions, lets assume that  
+/// we have region with permissions == `r-xp` .  
+/// Our `RegionPermissions` will have `readable` and    
+/// `executable` fields set to **true**, so `writeable`  
+/// and `shared` will be false, obviously.
+///  
+/// You can find more detailed permissions description  
+/// in `MemoryRegion.permissions` field documentation.
 #[derive(Eq, PartialEq)]
 pub struct RegionPermissions {
   pub readable: bool,
   pub writeable: bool,
   pub executable: bool,
   pub shared: bool,
-  
 }
 /// Each row in /proc/\[pid\]/maps describes a region of
 /// contiguous virtual memory in a process or thread.

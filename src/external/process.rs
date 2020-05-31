@@ -40,15 +40,17 @@ mod no_realloc_reader {
   }
 }
 
-// TODO: Document fields
-/// Process is object implementation of existing   
+// TODO: Document rest of fields
+/// Process is an object implementation of existing   
 /// numeric entry in `/proc/` directory.
 ///   
 /// **NOTE**: `memory_regions` field can be [`None`] .     
-/// if memory regions was not mapped. (`map_memory()` was not called).
+/// if memory regions were not mapped. (`map_memory()` was not called).
 ///   
 /// [`None`]: https://doc.rust-lang.org/std/option/
 pub struct Process {
+  /// A Pid (i.e., process identification number) is an auto   
+  /// generated identification number for each process.
   pid: Pid,
   name: String,
   memory_regions: Option<Vec<MemoryRegion>>,
@@ -317,8 +319,8 @@ impl Process {
         [hex usize], [hex usize], String, [hex usize], u8, u8, usize, String
       );
 
-      for char in permissions_string.unwrap().chars() {
-        match char {
+      for character in permissions_string.unwrap().chars() {
+        match character {
           'r' => permissions.readable = true,
           'w' => permissions.writeable = true,
           'x' => permissions.executable = true,
@@ -344,12 +346,12 @@ impl Process {
     Ok(())
   }
 
-  /// Returns copy of process id.
+  /// Returns process id.
   pub fn get_pid(&self) -> Pid {
     self.pid
   }
 
-  /// Returns immutable reference to the process name.
+  /// Returns process name.
   pub fn get_name(&self) -> &String {
     &self.name
   }
@@ -380,7 +382,7 @@ impl Process {
   /// - `map_memory();` should be called minimum once  
   /// before calling `region_find_first_by_name();`.
   /// - `region_name` can be equal to `[anonymous_region]` if  
-  /// region was not mapped from a file.
+  /// region was not mapped from a file or its not special.
   pub fn region_find_first_by_name(
     &self,
     region_name: &str,
