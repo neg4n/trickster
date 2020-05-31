@@ -45,7 +45,7 @@ mod no_realloc_reader {
 /// numeric entry in `/proc/` directory.
 ///   
 /// **NOTE**: `memory_regions` field can be [`None`] .     
-/// if memory regions were not mapped. (`map_memory()` was not called).
+/// if memory regions were not mapped. (`parse_maps()` was not called).
 ///   
 /// [`None`]: https://doc.rust-lang.org/std/option/
 pub struct Process {
@@ -62,7 +62,7 @@ impl Process {
   /// provided in method parameter with one located in `/proc/\[pid\]/comm` file.
   ///
   /// **WARNING**: This method __does not__ initialize `memory_regions` field.  
-  /// If you want to do so, use `map_memory()`.
+  /// If you want to do so, use `parse_maps()`.
   ///
   /// # Examples
   /// ```
@@ -292,11 +292,10 @@ impl Process {
     Ok(())
   }
 
-  // TODO: Consider re-name to parse_maps(); (also in docs...)
   /// Reads `/proc/\[pid\]/maps` file line by line and parses  
   /// every value to the corresponding value in `MemoryRegion` struct  
   /// in `self.memory_regions`.
-  pub fn map_memory(&mut self) -> Result<()> {
+  pub fn parse_maps(&mut self) -> Result<()> {
     let maps_path = std::path::Path::new("/proc/")
       .join(self.pid.to_string())
       .join("maps");
@@ -362,7 +361,7 @@ impl Process {
   /// [`None`]: https://doc.rust-lang.org/std/option/
   /// [`Err`]: https://doc.rust-lang.org/std/result/
   ///  
-  /// **NOTE**: `map_memory();` should be called minimum once  
+  /// **NOTE**: `parse_maps();` should be called minimum once  
   /// before calling `get_memory_regions();`.
   pub fn get_memory_regions(&self) -> Result<&Vec<MemoryRegion>> {
     match &self.memory_regions {
@@ -379,7 +378,7 @@ impl Process {
   /// [`None`]: https://doc.rust-lang.org/std/option/
   ///  
   /// **NOTES**:
-  /// - `map_memory();` should be called minimum once  
+  /// - `parse_maps();` should be called minimum once  
   /// before calling `region_find_first_by_name();`.
   /// - `region_name` can be equal to `[anonymous_region]` if  
   /// region was not mapped from a file or its not special.
