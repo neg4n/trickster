@@ -1,44 +1,12 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use nix::sys::uio::{process_vm_readv, process_vm_writev, IoVec, RemoteIoVec};
 use nix::unistd::Pid;
 use std::fs;
-use std::io;
+use std::io::{self, BufRead};
 use std::mem;
+use std::path;
 
 use super::{MemoryRegion, RegionPermissions};
-
-mod no_realloc_reader {
-  use std::{
-    fs::File,
-    io::{self, prelude::*},
-  };
-
-  pub struct BufReader {
-    reader: io::BufReader<File>,
-  }
-
-  impl BufReader {
-    pub fn open(path: impl AsRef<std::path::Path>) -> io::Result<Self> {
-      let file = File::open(path)?;
-      let reader = io::BufReader::new(file);
-
-      Ok(Self { reader })
-    }
-
-    pub fn read_line<'buf>(
-      &mut self,
-      buffer: &'buf mut String,
-    ) -> Option<io::Result<&'buf mut String>> {
-      buffer.clear();
-
-      self
-        .reader
-        .read_line(buffer)
-        .map(|u| if u == 0 { None } else { Some(buffer) })
-        .transpose()
-    }
-  }
-}
 
 // TODO: Document rest of fields
 /// Process is an object implementation of existing   
@@ -296,15 +264,16 @@ impl Process {
   /// every value to the corresponding value in `MemoryRegion` struct  
   /// in `self.memory_regions`.
   pub fn parse_maps(&mut self) -> Result<()> {
-    let maps_path = std::path::Path::new("/proc/")
+    let maps_path = path::Path::new("/proc/")
       .join(self.pid.to_string())
       .join("maps");
 
-    let mut reader = no_realloc_reader::BufReader::open(maps_path)?;
-    let mut buffer = String::new();
+    let mut reader = io::BufReader::new(fs::File::open(maps_path)?);
+    let mut buffer = Vec::<u8>::new();
     let mut memory_regions: Vec<MemoryRegion> = Vec::new();
 
-    while let Some(line) = reader.read_line(&mut buffer) {
+    while reader.read_until(b'\n', &mut buffer)? != 0 {
+      let line = String::from_utf8(buffer).unwrap();
       let mut permissions: RegionPermissions = RegionPermissions {
         readable: false,
         writeable: false,
@@ -313,7 +282,7 @@ impl Process {
       };
 
       let (start, end, permissions_string, offset, dev_major, dev_minor, inode, path) = scan_fmt_some!(
-        line?.trim(),
+        line.as_str(),
         "{x}-{x} {} {x} {}:{} {} {}",
         [hex usize], [hex usize], String, [hex usize], u8, u8, usize, String
       );
@@ -338,6 +307,9 @@ impl Process {
         inode: inode.unwrap(),
         path: path,
       });
+
+      buffer = line.into_bytes();
+      buffer.clear();
     }
 
     self.memory_regions = Some(memory_regions);
@@ -364,10 +336,10 @@ impl Process {
   /// **NOTE**: `parse_maps();` should be called minimum once  
   /// before calling `get_memory_regions();`.
   pub fn get_memory_regions(&self) -> Result<&Vec<MemoryRegion>> {
-    match &self.memory_regions {
-      Some(memory_regions) => return Ok(memory_regions),
+    return match &self.memory_regions {
+      Some(memory_regions) => Ok(memory_regions),
       None => Err(anyhow!("Memory regions not mapped.")),
-    }
+    };
   }
 
   /// Returns immutable reference to memory region with  

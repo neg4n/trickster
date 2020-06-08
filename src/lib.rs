@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate anyhow;
 extern crate nix;
 #[macro_use]
