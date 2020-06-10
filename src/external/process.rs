@@ -389,4 +389,26 @@ impl Process {
     }
     Err(anyhow!("Could not find {}.", region_name))
   }
+
+  /// Returns the region in which's range `address` is located.  
+  /// If `self.memory_regions` is [`None`], [`Err`] is returned.  
+  ///
+  /// [`None`]: https://doc.rust-lang.org/std/option/
+  /// [`Err`]: https://doc.rust-lang.org/std/result/
+  ///  
+  /// **NOTE**: `parse_maps();` should be called minimum once  
+  /// before calling `get_memory_regions();`.
+  pub fn reg_of_addr(&self, address: usize) -> Result<&MemoryRegion> {
+    match &self.memory_regions {
+      Some(regions) => {
+        for region in regions {
+          if address >= region.start && address <= region.end {
+            return Ok(region);
+          }
+        }
+      }
+      None => return Err(anyhow!("Memory regions not mapped.")),
+    }
+    Err(anyhow!("Could not get {:x}'s region.", address))
+  }
 }

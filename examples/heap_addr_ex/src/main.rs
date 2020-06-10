@@ -24,6 +24,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     "heap (start -> end): (0x{:x} -> 0x{:x})",
     heap_region.start, heap_region.end
   );
-  
+
+  // Process::reg_of_addr(); example
+  println!(
+    "heap start address + 0x1 region: {}",
+    ctx.reg_of_addr(heap_region.start + 0x1)?.path.clone().unwrap()
+  );
+
   Ok(())
 }
