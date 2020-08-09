@@ -411,4 +411,30 @@ impl Process {
     }
     Err(anyhow!("Could not get {:x}'s region.", address))
   }
+
+  // TODO: document this
+  #[cfg(feature = "byteorder-utils")]
+  #[cfg(target_endian = "little")]
+  /// Returns the absolute address calculated from function parameters.
+  pub fn abs_addr(&self, address: usize, offset: usize, size: usize) -> Result<usize> {
+    use byteorder::{NativeEndian, ReadBytesExt};
+    if let Ok(mut buffer) = self.read_memory::<u32>(address + offset) {
+      let value = buffer.read_u32::<NativeEndian>()?;
+      return Ok(value as usize + address + size)
+    }
+    Err(anyhow!("Could not get absolute address."))
+  }
+
+  // TODO: document this
+  #[cfg(feature = "byteorder-utils")]
+  #[cfg(target_endian = "little")]
+  /// Returns the call address.
+  pub fn call_addr(&self, address: usize) -> Result<usize> {
+    use byteorder::{NativeEndian, ReadBytesExt};
+    if let Ok(mut buffer) = self.read_memory::<u32>(address + 0x1) {
+      let value = buffer.read_u32::<NativeEndian>()?;
+      return Ok(value as usize + address + 0x5)
+    }
+    Err(anyhow!("Could not get call address."))
+  }
 }
