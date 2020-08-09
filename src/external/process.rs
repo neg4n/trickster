@@ -169,7 +169,7 @@ impl Process {
             "Could not read memory at {:#x} ({}).",
             address,
             error
-          ))
+          ));
         }
       };
 
@@ -249,7 +249,7 @@ impl Process {
           "Could not write memory at {:#x} ({}).",
           address,
           error
-        ))
+        ));
       }
     };
 
@@ -300,12 +300,12 @@ impl Process {
       memory_regions.push(MemoryRegion {
         start: start.unwrap(),
         end: end.unwrap(),
-        permissions: permissions,
+        permissions,
         offset: offset.unwrap(),
         dev_major: dev_major.unwrap(),
         dev_minor: dev_minor.unwrap(),
         inode: inode.unwrap(),
-        path: path,
+        path,
       });
 
       buffer = line.into_bytes();
@@ -375,15 +375,15 @@ impl Process {
         .split_off(index_to_split + if index_to_split > 0 { 1 } else { 0 });
 
       if split_file_name == region_name {
-        match permissions_eq {
+        return match permissions_eq {
           Some(permissions) => {
             if permissions == region.permissions {
-              return Ok(region);
+              Ok(region)
             } else {
-              return Err(anyhow!("Could not get region with specific permissions."));
+              Err(anyhow!("Could not get region with specific permissions."))
             }
           }
-          None => return Ok(region),
+          None => Ok(region),
         };
       }
     }
@@ -420,7 +420,7 @@ impl Process {
     use byteorder::{NativeEndian, ReadBytesExt};
     if let Ok(mut buffer) = self.read_memory::<u32>(address + offset) {
       let value = buffer.read_u32::<NativeEndian>()?;
-      return Ok(value as usize + address + size)
+      return Ok(value as usize + address + size);
     }
     Err(anyhow!("Could not get absolute address."))
   }
@@ -433,7 +433,7 @@ impl Process {
     use byteorder::{NativeEndian, ReadBytesExt};
     if let Ok(mut buffer) = self.read_memory::<u32>(address + 0x1) {
       let value = buffer.read_u32::<NativeEndian>()?;
-      return Ok(value as usize + address + 0x5)
+      return Ok(value as usize + address + 0x5);
     }
     Err(anyhow!("Could not get call address."))
   }
