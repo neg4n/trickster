@@ -7,7 +7,7 @@
 ///  
 /// You can find more detailed permissions description  
 /// in `MemoryRegion.permissions` field documentation.
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Debug)]
 pub struct RegionPermissions {
   pub readable: bool,
   pub writeable: bool,
@@ -19,6 +19,7 @@ pub struct RegionPermissions {
 //  Each row has the following fields:
 //  address           perms offset  dev   inode   pathname
 //  08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
+#[derive(Debug)]
 pub struct MemoryRegion {
   /// This is the starting address of the region in the process's address space.
   pub start: usize,
