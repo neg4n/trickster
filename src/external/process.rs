@@ -144,10 +144,10 @@ impl Process {
   /// ```
   /// extern crate byteorder;
   /// use byteorder::{LittleEndian, ReadBytesExt};
-  /// ...
+  /// // ...
   /// let mut read_byte_buffer = ctx.read_memory::<i32>(&kind_of_remote_var as *const i32 as usize)?;
   /// println!("kind_of_remote_var from byte buffer: {}", read_byte_buffer.read_i32::<LittleEndian>()?);
-  /// ...
+  /// // ...
   /// ```
   /// ...and this prints output like:  
   /// `example process id: 26444`  
@@ -227,11 +227,11 @@ impl Process {
   /// ```
   /// extern crate byteorder;
   /// use byteorder::{LittleEndian, WriteBytesExt};
-  /// ...
+  /// // ...
   /// let mut write_buffer = Vec::new();
   /// write_buffer.write_i32::<LittleEndian>(10)?;
   /// ctx.write_memory::<i32>(&kind_of_remote_var as *const i32 as usize, write_buffer)?;
-  /// ...
+  /// // ...
   /// ```
   pub fn write_memory<T>(&self, address: usize, buffer: Vec<u8>) -> Result<()> {
     let bytes_requested = mem::size_of::<T>();
