@@ -1,13 +1,14 @@
-# trickster
-  
-<sub> user-friendly linux memory hacking library written in Rust. </sub>
-  
-This project is continuation of *(from now)* abandoned [tr](https://github.com/neg4n/tr)  
-library with the same purpose but written in C++17.
+<img align="left" width="90" src="./assets/cat.png">
+
+## trickster
+
+user-friendly linux  
+memory hacking library  
+<sub>written in Rust</sub>
   
 ```toml
 [dependencies]
-trickster = "0.0.5"
+trickster = "0.0.6"
 ```
 
 # Usage and documentation
@@ -30,5 +31,8 @@ This library currently provides ability to:
 and will provide a lot more in the future.
 
 # Acknowledgements
+The cat used in logo comes from [blush.design](https://blush.design/collections/dayflow/stickers-cat/lBGCaheTt)
+
 Thanks to all present and future contributors.  
 Library is available under [The MIT License](https://opensource.org/licenses/MIT).
+
