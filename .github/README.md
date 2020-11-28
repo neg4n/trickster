@@ -1,10 +1,9 @@
-<img align="left" width="90" src="./assets/cat.png">
+<img align="left" width="100" src="./assets/cat.png">
 
-## trickster
+### trickster
 
 user-friendly linux  
 memory hacking library  
-<sub>written in Rust</sub>
   
 ```toml
 [dependencies]
