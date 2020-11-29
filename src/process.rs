@@ -398,7 +398,7 @@ impl Process {
   ///  
   /// **NOTE**: `parse_maps();` should be called minimum once  
   /// before calling `get_memory_regions();`.
-  pub fn reg_of_addr(&self, address: usize) -> Result<&MemoryRegion> {
+  pub fn get_address_region(&self, address: usize) -> Result<&MemoryRegion> {
     match &self.memory_regions {
       Some(regions) => {
         for region in regions {
