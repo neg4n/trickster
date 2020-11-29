@@ -1,5 +1,5 @@
 extern crate trickster;
-use trickster::external::Process;
+use trickster::Process;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   let ctx = Process::new("get_pid")?;

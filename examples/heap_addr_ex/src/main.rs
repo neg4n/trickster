@@ -1,5 +1,5 @@
 extern crate trickster;
-use trickster::external::{Process, RegionPermissions};
+use trickster::{Process, RegionPermissions};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   // In order to use parse_maps() it needs to be mutable.
